@@ -42,7 +42,12 @@ void bitonicMerge(int a[], int start, int n, int dir)
             compAndSwap(a, i, i+k, dir);
         }
         bitonicMerge(a, start, k, dir);
-        bitonicMerge(a, start+k, k, dir);
+        if(n%2 == 1){
+            bitonicMerge(a, start+k, k+1, dir);
+        }
+        else{
+            bitonicMerge(a, start+k, k, dir);
+        }
     }
 }
 // Cria uma sequencia bitonica recursivamente
@@ -54,7 +59,12 @@ void bitonicSort(int a[],int start, int n, int dir)
         
         bitonicSort(a, start, k, ASC);
 
-        bitonicSort(a, start+k, k, DESC);
+        if(n%2 == 1){
+            bitonicSort(a, start+k, k+1, DESC);
+        }
+        else{
+            bitonicSort(a, start+k, k, DESC);
+        }
 
         bitonicMerge(a,start, n, dir);
     }
