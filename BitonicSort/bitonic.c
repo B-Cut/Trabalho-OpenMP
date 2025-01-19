@@ -14,13 +14,19 @@ void print_list(int* list, int size){
 }
 
 
+void swap(int *a, int *b){
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
 /*The parameter dir indicates the sorting direction, ASCENDING
    or DESCENDING; if (a[i] > a[j]) agrees with the direction,
    then a[i] and a[j] are interchanged.*/
 void compAndSwap(int a[], int i, int j, int dir)
 {
     if (dir==(a[i]>a[j])){
-        swap(a[i],a[j]);
+        swap(&a[i],&a[j]);
     }
 }
  
@@ -33,7 +39,7 @@ void bitonicMerge(int a[], int low, int cnt, int dir)
     if (cnt>1)
     {
         int k = cnt/2;
-        #pragma omp parallel for schedule(STATIC)
+        #pragma omp parallel for
         for (int i=low; i<low+k; i++){
             compAndSwap(a, i, i+k, dir);
         }
@@ -81,11 +87,11 @@ int main(int argc, char** argv) {
 
     #pragma omp parallel for
     for (int i = 0; i < num_elements; i++){
-        list[i] = rand() % 1000000;
+        list[i] = rand() % 100;
     }
 
-    /*printf("> Lista não ordenada: ");
-    print_list(list, num_elements);*/
+    printf("> Lista não ordenada: ");
+    print_list(list, num_elements);
 
 
     omp_set_num_threads(num_threads);
@@ -93,10 +99,10 @@ int main(int argc, char** argv) {
     clock_t start = clock();
 
     // Começo do bitonic
-    int N = num_elements/sizeof(list[0]);
+    //int N = num_elements/sizeof(list[0]);
  
     int up = 1;   // means sort in ascending order
-    bitonicSort(list, 0, N, up);
+    bitonicSort(list, 0, num_elements, up);
     // Fim do bitonic
     
     clock_t end = clock();
@@ -104,8 +110,8 @@ int main(int argc, char** argv) {
     double time_spent = (double) (end - start) / CLOCKS_PER_SEC; // Resultado em milissegundos, queremos segundos
 
     printf("%d threads demoraram %.6f segundos para ordenar uma lista de %d elementos\n", num_threads, time_spent, num_elements);
-    /*printf("> Lista ordenada: ");
-    print_list(list, num_elements);*/
+    printf("> Lista ordenada: ");
+    print_list(list, num_elements);
 
     free(list);
     return 0;
