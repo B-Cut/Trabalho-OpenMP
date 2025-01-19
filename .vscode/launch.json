@@ -10,7 +10,8 @@
             "request": "launch",
             "cwd": "${fileDirname}",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": ["2", "10"]
+            "args": [ "8"],
+            
         }
     ]
     
