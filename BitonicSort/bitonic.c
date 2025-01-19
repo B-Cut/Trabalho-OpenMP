@@ -3,6 +3,8 @@
 #include <omp.h>
 #include <time.h>
 
+int num_threads;
+
 void print_list(int* list, int size){
     for (int i = 0; i < size; i++){
         printf("%d ", list[i]);
@@ -17,8 +19,9 @@ void print_list(int* list, int size){
    then a[i] and a[j] are interchanged.*/
 void compAndSwap(int a[], int i, int j, int dir)
 {
-    if (dir==(a[i]>a[j]))
+    if (dir==(a[i]>a[j])){
         swap(a[i],a[j]);
+    }
 }
  
 /*It recursively sorts a bitonic sequence in ascending order,
@@ -30,8 +33,10 @@ void bitonicMerge(int a[], int low, int cnt, int dir)
     if (cnt>1)
     {
         int k = cnt/2;
-        for (int i=low; i<low+k; i++)
+        #pragma omp parallel for schedule(STATIC)
+        for (int i=low; i<low+k; i++){
             compAndSwap(a, i, i+k, dir);
+        }
         bitonicMerge(a, low, k, dir);
         bitonicMerge(a, low+k, k, dir);
     }
@@ -44,13 +49,10 @@ void bitonicSort(int a[],int low, int cnt, int dir)
     if (cnt>1)
     {
         int k = cnt/2;
- 
         // sort in ascending order since dir here is 1
         bitonicSort(a, low, k, 1);
- 
         // sort in descending order since dir here is 0
         bitonicSort(a, low+k, k, 0);
- 
         // Will merge whole sequence in ascending order
         // since dir=1.
         bitonicMerge(a,low, cnt, dir);
@@ -65,7 +67,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    int num_threads = atoi(argv[1]);
+    num_threads = atoi(argv[1]);
     int num_elements = atoi(argv[2]);
 
     int* list = (int*) malloc(num_elements * sizeof(int));
@@ -86,20 +88,16 @@ int main(int argc, char** argv) {
     print_list(list, num_elements);*/
 
 
-    // Agora fazemos de fato o bitonic sort
-
-    // Esse algoritmo é uma implementação extramamente simples. Cada thread é responsável por um par de trocas
-
     omp_set_num_threads(num_threads);
 
     clock_t start = clock();
 
-    // Devemos alternar entre indices pares e impares para garantir que haverão trocas em cada iteração
+    // Começo do bitonic
     int N = num_elements/sizeof(list[0]);
  
     int up = 1;   // means sort in ascending order
     bitonicSort(list, 0, N, up);
-    ////////////////////////////////////////
+    // Fim do bitonic
     
     clock_t end = clock();
 
