@@ -37,7 +37,7 @@ void compAndSwap(int a[], int i, int j, int dir)
 void sort(int list[], int start, int n, int dir){
     int passo = n /2;
     while(passo > 0){
-        #pragma omp parallel for if(n == global_num_elements)
+        //#pragma omp parallel for if(n == global_num_elements)
         for(int i = start; i < start + n; i += 2*passo){
             for(int j = i, k = 0; k < passo; j++, k++){
                 int temp = j + passo;
@@ -64,20 +64,24 @@ if (argc != 2){
         list[i] = rand() % 1000000;
     }
 
-    printf("> Lista não ordenada: ");
-    print_list(list, global_num_elements);
+    /*printf("> Lista não ordenada: ");
+    print_list(list, global_num_elements);*/
 
     clock_t start = clock();
 
     // Sort bitonico
     
     for (int window = 2; window <= global_num_elements; window*=2) {
-        #pragma omp parallel for if(window < global_num_elements)
+        //#pragma omp parallel for if(window < global_num_elements)
         for (int i = 0; i < global_num_elements; i += (2*window)) {
             int middle = i+window;
             
             sort(list, i, window, ASC);
-            sort(list, middle, window, DESC); 
+            // Quando a janela for igual ao número de elementos, analisar a "segunda metade" resulta em segfault
+            if(window < global_num_elements){
+                sort(list, middle, window, DESC); 
+            }
+            
         }
     }
 
@@ -86,8 +90,8 @@ if (argc != 2){
     double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
 
     printf("Algoritmo sequencial demorou %.6f segundos para ordenar uma lista de %d elementos\n",  time_spent, global_num_elements);
-    printf("> Lista ordenada: ");
-    print_list(list, global_num_elements);
+    /*printf("> Lista ordenada: ");
+    print_list(list, global_num_elements);*/
 
     free(list);
     return 0;
