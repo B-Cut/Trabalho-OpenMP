@@ -6,6 +6,9 @@
 #define ASC 1
 #define DESC 0
 
+// Má prática, mas util nesse caso
+int global_num_elements;
+
 void print_list(int* list, int size){
     for (int i = 0; i < size; i++){
         printf("%d ", list[i]);
@@ -30,10 +33,11 @@ void compAndSwap(int a[], int i, int j, int dir)
     }
 }
 
-// Ordena em ordem crescente se dir for ASC ou descendente de dir for DES
+// Ordena em ordem crescente se dir for ASC ou descrescente de dir for DES
 void sort(int list[], int start, int n, int dir){
     int passo = n /2;
     while(passo > 0){
+        #pragma omp parallel for if(n == global_num_elements)
         for(int i = start; i < start + n; i += 2*passo){
             for(int j = i, k = 0; k < passo; j++, k++){
                 int temp = j + passo;
@@ -49,25 +53,27 @@ if (argc != 2){
         printf("Uso: parallel_bitonic <numero_de_elementos>\n");
         return -1;
     }
-    int num_elements = atoi(argv[1]);
+    global_num_elements = atoi(argv[1]);
 
-    int* list = (int*) malloc(num_elements * sizeof(int));
+    int* list = (int*) malloc(global_num_elements * sizeof(int));
 
 
     srand(1);
 
-    for (int i = 0; i < num_elements; i++){
+    for (int i = 0; i < global_num_elements; i++){
         list[i] = rand() % 1000000;
     }
 
     printf("> Lista não ordenada: ");
-    print_list(list, num_elements);
+    print_list(list, global_num_elements);
 
     clock_t start = clock();
 
     // Sort bitonico
-    for (int window = 2; window <= num_elements; window*=2) {
-        for (int i = 0; i < num_elements; i += (2*window)) {
+    
+    for (int window = 2; window <= global_num_elements; window*=2) {
+        #pragma omp parallel for if(window < global_num_elements)
+        for (int i = 0; i < global_num_elements; i += (2*window)) {
             int middle = i+window;
             
             sort(list, i, window, ASC);
@@ -79,9 +85,9 @@ if (argc != 2){
 
     double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
 
-    printf("Algoritmo sequencial demorou %.6f segundos para ordenar uma lista de %d elementos\n",  time_spent, num_elements);
+    printf("Algoritmo sequencial demorou %.6f segundos para ordenar uma lista de %d elementos\n",  time_spent, global_num_elements);
     printf("> Lista ordenada: ");
-    print_list(list, num_elements);
+    print_list(list, global_num_elements);
 
     free(list);
     return 0;
