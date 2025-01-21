@@ -25,11 +25,6 @@ int main(int argc, char** argv) {
 
     srand(1);
 
-    // Vamos gerar a lista de elementos de forma paralela também
-    // Como minha máquina tem 6 cores, vou usar 6 threads.
-    omp_set_num_threads(6);
-
-    #pragma omp parallel for
     for (int i = 0; i < num_elements; i++){
         list[i] = rand() % 1000000;
     }
