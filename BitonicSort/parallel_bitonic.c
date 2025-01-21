@@ -36,8 +36,9 @@ void compAndSwap(int a[], int i, int j, int dir)
 // Ordena em ordem crescente se dir for ASC ou descrescente de dir for DES
 void sort(int list[], int start, int n, int dir){
     int passo = n /2;
+    int num_elements = global_num_elements;
     while(passo > 0){
-        //#pragma omp parallel for if(n == global_num_elements)
+        #pragma omp if(n==num_elements)  parallel for 
         for(int i = start; i < start + n; i += 2*passo){
             for(int j = i, k = 0; k < passo; j++, k++){
                 int temp = j + passo;
@@ -49,11 +50,13 @@ void sort(int list[], int start, int n, int dir){
 }
 
 int main(int argc, char **argv) {
-if (argc != 2){
-        printf("Uso: parallel_bitonic <numero_de_elementos>\n");
+if (argc != 3){
+        printf("Uso: parallel_bitonic <numero_de_threads> <numero_de_elementos>\n");
         return -1;
     }
     global_num_elements = atoi(argv[1]);
+    int num_threads = atoi(argv[2]);
+    omp_set_num_threads(num_threads);
 
     int* list = (int*) malloc(global_num_elements * sizeof(int));
 
@@ -72,7 +75,7 @@ if (argc != 2){
     // Sort bitonico
     
     for (int window = 2; window <= global_num_elements; window*=2) {
-        //#pragma omp parallel for if(window < global_num_elements)
+        #pragma omp if(window < global_num_elements) parallel for 
         for (int i = 0; i < global_num_elements; i += (2*window)) {
             int middle = i+window;
             
