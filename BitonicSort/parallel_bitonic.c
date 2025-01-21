@@ -57,8 +57,10 @@ if (argc != 3){
         printf("Uso: parallel_bitonic <numero_de_threads> <numero_de_elementos>\n");
         return -1;
     }
-    int num_elements = atoi(argv[1]);
-    int num_threads = atoi(argv[2]);
+
+    int num_threads = atoi(argv[1]);
+    int num_elements = atoi(argv[2]);
+    
     omp_set_num_threads(num_threads);
 
     int* list = (int*) malloc(num_elements * sizeof(int));
@@ -82,7 +84,7 @@ if (argc != 3){
             paralelizarTrocas = checaTrocaParalelizacao(window, num_threads, num_elements);
         }
 
-        #pragma omp if(paralelizar_trocas) parallel for 
+        #pragma omp if(!paralelizar_trocas) parallel for 
         for (int i = 0; i < num_elements; i += (2*window)) {
             int middle = i+window;
             
