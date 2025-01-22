@@ -9,7 +9,7 @@
 // Primeiro paralelizamos cada "janela" da lista completa
 // Se houverem mais threads que janelas, trocamos para a paralelização das trocas realizadas pela função "sort"
 int checaTrocaParalelizacao(int window_size, int num_threads, int num_elements){
-    return num_threads > num_elements/window_size;
+    return 0;
 }
 
 void print_list(int* list, int size){
@@ -27,8 +27,6 @@ void swap(int *a, int *b){
     *b = temp;
 }
 
-
-
 // dir indica se a troca é ascendente ou descendente
 void compAndSwap(int a[], int i, int j, int dir)
 {
@@ -41,19 +39,31 @@ void compAndSwap(int a[], int i, int j, int dir)
 void sort(int list[], int start, int n, int dir, int total_num_elements, int paralelizar){
     int passo = n /2;
     while(passo > 0){
-        #pragma omp if(paralelizar)  parallel for 
-        for(int i = start; i < start + n; i += 2*passo){
-            for(int j = i, k = 0; k < passo; j++, k++){
-                int temp = j + passo;
-                compAndSwap(list, j, temp, dir);
+        if(paralelizar){     
+            for(int i = start; i < start + n; i += 2*passo){
+                int j = i;
+                #pragma omp parallel for 
+                for(int k = 0; k < passo; k++){
+                    int temp = j + passo;
+                    compAndSwap(list, j, temp, dir);
+                    j++;
+                }
+            }
+        } else {
+            for(int i = start; i < start + n; i += 2*passo){
+                for(int j = i, k = 0; k < passo; j++, k++){
+                    int temp = j + passo;
+                    compAndSwap(list, j, temp, dir);
+                }
             }
         }
+        
         passo /= 2;
     }
 }
 
 int main(int argc, char **argv) {
-if (argc != 3){
+    if (argc != 3){
         printf("Uso: parallel_bitonic <numero_de_threads> <numero_de_elementos>\n");
         return -1;
     }
@@ -72,8 +82,6 @@ if (argc != 3){
         list[i] = rand() % 1000000;
     }
     int paralelizarTrocas = 0;
-    /*printf("> Lista não ordenada: ");
-    print_list(list, global_num_elements);*/
 
     clock_t start = clock();
 
@@ -84,16 +92,15 @@ if (argc != 3){
             paralelizarTrocas = checaTrocaParalelizacao(window, num_threads, num_elements);
         }
 
-        #pragma omp if(!paralelizar_trocas) parallel for 
-        for (int i = 0; i < num_elements; i += (2*window)) {
+        int i = 0;
+        #pragma omp parallel for if(paralelizarTrocas == 0)
+        for (i = 0; i < num_elements; i += (2*window)) {
             int middle = i+window;
-            
             sort(list, i, window, ASC, num_elements, paralelizarTrocas);
             // Quando a janela for igual ao número de elementos, analisar a "segunda metade" resulta em segfault
             if(window < num_elements){
                 sort(list, middle, window, DESC, num_elements, paralelizarTrocas); 
             }
-            
         }
     }
 
@@ -102,8 +109,6 @@ if (argc != 3){
     double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
 
     printf("Algoritmo sequencial demorou %.6f segundos para ordenar uma lista de %d elementos\n",  time_spent, num_elements);
-    /*printf("> Lista ordenada: ");
-    print_list(list, global_num_elements);*/
 
     free(list);
     return 0;
