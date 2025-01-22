@@ -9,7 +9,7 @@
 // Primeiro paralelizamos cada "janela" da lista completa
 // Se houverem mais threads que janelas, trocamos para a paralelização das trocas realizadas pela função "sort"
 int checaTrocaParalelizacao(int window_size, int num_threads, int num_elements){
-    return 0;
+    return num_threads >= num_elements/(window_size*2);
 }
 
 void print_list(int* list, int size){
@@ -40,17 +40,16 @@ void sort(int list[], int start, int n, int dir, int total_num_elements, int par
     int passo = n /2;
     while(passo > 0){
         if(paralelizar){     
+            #pragma omp parallel for
             for(int i = start; i < start + n; i += 2*passo){
-                int j = i;
-                #pragma omp parallel for 
-                for(int k = 0; k < passo; k++){
+                for(int j = i, k = 0; k < passo; j++, k++){
                     int temp = j + passo;
                     compAndSwap(list, j, temp, dir);
-                    j++;
                 }
             }
         } else {
             for(int i = start; i < start + n; i += 2*passo){
+                // j marca o elemento atual, k marca quantos passos executamos
                 for(int j = i, k = 0; k < passo; j++, k++){
                     int temp = j + passo;
                     compAndSwap(list, j, temp, dir);
@@ -93,7 +92,7 @@ int main(int argc, char **argv) {
         }
 
         int i = 0;
-        #pragma omp parallel for if(paralelizarTrocas == 0)
+        #pragma omp parallel for if(!paralelizarTrocas) 
         for (i = 0; i < num_elements; i += (2*window)) {
             int middle = i+window;
             sort(list, i, window, ASC, num_elements, paralelizarTrocas);
@@ -108,7 +107,7 @@ int main(int argc, char **argv) {
 
     double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
 
-    printf("Algoritmo sequencial demorou %.6f segundos para ordenar uma lista de %d elementos\n",  time_spent, num_elements);
+    printf("%d threads levaram %.6f segundos para ordenar uma lista de %d elementos\n", num_threads, time_spent, num_elements);
 
     free(list);
     return 0;
